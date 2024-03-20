@@ -10,7 +10,10 @@ import {
 import { navigation } from "./NavigationData";
 import { Avatar, Button, Menu, MenuItem } from "@mui/material";
 import { deepPurple } from "@mui/material/colors";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import AuthModal from "../Auth/AuthModal";
+import { useDispatch, useSelector } from "react-redux";
+import { getUser } from "../../../Redux/Auth/Action";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -23,6 +26,11 @@ export default function Navigation() {
   const [anchorEl, setAnchorEl] = useState(null);
   const openUserMenu = Boolean(anchorEl);
   const jwt = localStorage.getItem("jwt");
+
+  const { auth } = useSelector((store) => store);
+  const dispatch = useDispatch();
+  const location = useLocation();
+
 
   const handleUserClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -42,6 +50,19 @@ export default function Navigation() {
     navigate(`/${category.id}/${section.id}/${item.id}`);
     close();
   };
+
+  useEffect(()=>{
+      dispatch(getUser(jwt));
+  }, [jwt]);
+
+  useEffect(()=>{
+    if(auth.user){
+      handleClose();
+    }
+    if(location.pathname === "/login" || location.pathname === "/register"){
+      navigate(-1);
+    }
+  },[auth.user])
 
 
   return (
@@ -191,13 +212,13 @@ export default function Navigation() {
 
                 <div className="space-y-6 border-t border-gray-200 px-4 py-6">
                   <div className="flow-root">
-                    <a
+                   {!auth.user ?<a
                       href="/"
-                      className="-m-2 block p-2 font-medium text-gray-900"
+                      className="-m-2 block p-2 font-medium text-gray-900 uppercase"
                       style={{ color: "#9155fd" }}
                     >
-                      Sign in
-                    </a>
+                      Sign Up
+                    </a>:auth.user.firstName +" "+ auth.user.lastName} 
                   </div>
                 </div>
 
@@ -277,7 +298,6 @@ export default function Navigation() {
                             leaveTo="opacity-0"
                           >
                             <Popover.Panel className="absolute inset-x-0 top-full text-sm text-gray-500">
-                              {/* Presentational element used to render the bottom shadow, if we put the shadow on the actual panel it pokes out the top, so we use this shorter element to hide the top of the shadow */}
                               <div
                                 className="absolute inset-0 top-1/2 bg-white shadow"
                                 aria-hidden="true"
@@ -381,6 +401,7 @@ export default function Navigation() {
 
               <div className="ml-auto flex items-center">
                 <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
+                {auth.user?.firstName ? (
                   <div>
                     <Avatar
                       className="text-white"
@@ -388,14 +409,13 @@ export default function Navigation() {
                       aria-controls={open ? "basic-menu" : undefined}
                       aria-haspopup="true"
                       aria-expanded={open ? "true" : undefined}
-                      // onClick={handleUserClick}
                       sx={{
                         bgcolor: deepPurple[500],
                         color: "white",
                         cursor: "pointer",
                       }}
                     >
-                      R
+                      {auth.user.firstName[0].toUpperCase()}
                     </Avatar>
                     {/* <Button
                         id="basic-button"
@@ -421,14 +441,15 @@ export default function Navigation() {
                       <MenuItem>Logout</MenuItem>
                     </Menu>
                   </div>
-
+               ) : (
                   <Button
                     onClick={handleOpen}
-                    className="text-sm font-medium text-gray-700 hover:text-gray-800"
+                    className="text-sm font-medium text-gray-700 hover:text-gray-800 uppercase"
                      sx = {{color: "#9155fd"}}
                   >
-                    Sign in
+                    Sign Up
                   </Button>
+                  )}
                 </div>
 
                 {/* Search */}
@@ -463,6 +484,7 @@ export default function Navigation() {
           </div>
         </nav>
       </header>
+      <AuthModal handleClose={handleClose} open={openAuthModal}/>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import MainCarousel from "../../HomeCarousel/MainCarousel";
 import HomeSectionCarousel from "../../HomeSectionCarousel/HomeSectionCarousel";
 import { mens_kurta } from "../../../../Data/mens_kurta";
 
-function HomePage() {
+function HomePage() { 
   return (
     <div>
       <MainCarousel />
