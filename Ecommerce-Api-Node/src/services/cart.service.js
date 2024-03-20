@@ -16,29 +16,33 @@ async function createCart(user) {
 
 // Find a user's cart and update cart details
 async function findUserCart(userId) {
-  let cart = await Cart.findOne({ user: userId });
+  try {
+    let cart = await Cart.findOne({ user: userId });
 
-  let cartItems = await CartItem.find({ cart: cart._id }).populate("product");
+    let cartItems = await CartItem.find({ cart: cart._id }).populate("product");
 
-  cart.cartItems = cartItems;
+    cart.cartItems = cartItems;
 
-  let totalPrice = 0;
-  let totalDiscountedPrice = 0;
-  let totalItem = 0;
+    let totalPrice = 0;
+    let totalDiscountedPrice = 0;
+    let totalItem = 0;
 
-  for (const cartItem of cart.cartItems) {
-    totalPrice += cartItem.price;
-    totalDiscountedPrice += cartItem.discountedPrice;
-    totalItem += cartItem.quantity;
+    for (const cartItem of cart.cartItems) {
+      totalPrice += cartItem.price;
+      totalDiscountedPrice += cartItem.discountedPrice;
+      totalItem += cartItem.quantity;
+    }
+
+    cart.totalPrice = totalPrice;
+    cart.totalItem = totalItem;
+    cart.totalDiscountedPrice = totalDiscountedPrice;
+    cart.discounte = totalPrice - totalDiscountedPrice;
+
+    // const updatedCart = await cart.save();
+    return cart;
+  } catch (err) {
+    throw new Error("error in findUserCart: " + err.message);
   }
-
-  cart.totalPrice = totalPrice;
-  cart.totalItem = totalItem;
-  cart.totalDiscountedPrice = totalDiscountedPrice;
-  cart.discounte = totalPrice - totalDiscountedPrice;
-
-  // const updatedCart = await cart.save();
-  return cart;
 }
 
 // Add an item to the user's cart
@@ -71,7 +75,7 @@ async function addCartItem(userId, req) {
 
     return "Item added to cart";
   } catch (err) {
-    
+    throw new Error("error in findUserCart: " + err.message);
   }
 }
 

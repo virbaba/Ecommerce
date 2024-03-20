@@ -1,8 +1,4 @@
-const express=require("express");
-const router=express.Router();
-
 const cartService=require("../services/cart.service.js");
-
 
 
 const findUserCart = async (req, res) => {

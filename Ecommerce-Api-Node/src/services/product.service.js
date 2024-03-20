@@ -13,7 +13,7 @@ async function createProduct(reqData) {
 
     topLevel = await topLavelCategory.save();
   }
-
+ 
   let secondLevel = await Category.findOne({
     name: reqData.secondLavelCategory,
     parentCategory: topLevel._id,
@@ -118,7 +118,9 @@ async function getAllProducts(reqQuery) {
 
   if (color) {
     const colorSet = new Set(color.split(",").map(color => color.trim().toLowerCase()));
+
     const colorRegex = colorSet.size > 0 ? new RegExp([...colorSet].join("|"), "i") : null;
+    
     query = query.where("color").regex(colorRegex);
     // query = query.where("color").in([...colorSet]);
   }

@@ -1,6 +1,7 @@
 const express=require("express");
-const authenticate = require("../middleware/authenticat.js");
 const router=express.Router();
+
+const authenticate = require("../middleware/authenticat.js");
 const adminOrderController=require("../controllers/adminOrder.controller.js")
 
 router.get("/",authenticate,adminOrderController.getAllOrders);

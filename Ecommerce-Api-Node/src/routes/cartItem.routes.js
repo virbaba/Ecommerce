@@ -1,6 +1,7 @@
 const express=require("express");
-const authenticate = require("../middleware/authenticat.js");
 const router=express.Router();
+
+const authenticate = require("../middleware/authenticat.js");
 
 const cartItemController=require("../controllers/cartItem.controller.js");
 
