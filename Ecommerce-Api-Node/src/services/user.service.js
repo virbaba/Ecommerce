@@ -47,11 +47,6 @@ const getUserByEmail=async(email)=>{
     try {
 
         const user=await User.findOne({email});
-
-        if(!user){
-            throw new Error("user found with email : ",email)
-        }
-
         return user;
         
     } catch (error) {
@@ -64,9 +59,6 @@ const getUserProfileByToken=async(token)=>{
     try {
 
         const userId=jwtProvider.getUserIdFromToken(token)
-
-        console.log("userr id ",userId)
-
 
         const user= (await findUserById(userId)).populate("addresses");
         user.password=null;

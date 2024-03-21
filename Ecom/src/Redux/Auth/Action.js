@@ -23,12 +23,12 @@ export const register = userData => async dispatch => {
   try {
     const response=await axios.post(`${API_BASE_URL}/auth/signup`, userData);
     const user = response.data;
-
+    
     if(user.jwt) localStorage.setItem("jwt",user.jwt)
     
     dispatch(registerSuccess(user));
   } catch (error) {
-    dispatch(registerFailure(error.message));
+    dispatch(registerFailure("User Already Exists"));
   }
 };
 
@@ -42,11 +42,12 @@ export const login = userData => async dispatch => {
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/signin`, userData);
     const user = response.data;
-    if(user.jwt) localStorage.setItem("jwt",user.jwt)
+    // console.log(user);
+    if(user && user.jwt) localStorage.setItem("jwt",user.jwt)
     
     dispatch(loginSuccess(user));
   } catch (error) {
-    dispatch(loginFailure(error.message));
+    dispatch(loginFailure("Wrong Cradantial"));
   }
 };
 
@@ -71,7 +72,7 @@ export const getUser = (token) => {
   };
 };
 
-export const logout = (token) => {
+export const logout = () => {
     return async (dispatch) => {
       dispatch({ type: LOGOUT });
       localStorage.clear();

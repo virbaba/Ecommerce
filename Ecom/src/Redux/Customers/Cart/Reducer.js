@@ -36,12 +36,13 @@ const cartReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: true,
+        error: null
       };
     case GET_CART_SUCCESS:
       return {
         ...state,
         cartItems: action.payload.cartItems,
-        cart:action.payload,
+        cart: action.payload,
         loading: false,
       };
     case GET_CART_FAILURE:

@@ -12,18 +12,21 @@ export default function LoginUserForm({ handleNext }) {
   const jwt = localStorage.getItem("jwt");
   const [openSnackBar, setOpenSnackBar] = useState(false);
   const { auth } = useSelector((store) => store);
-  const handleCloseSnakbar = () => setOpenSnackBar(false);
+  
+  const handleCloseSnakbar = () => {
+    auth.error = null;
+    setOpenSnackBar(false);
+  } 
   
   useEffect(() => {
     if (jwt) {
       dispatch(getUser(jwt));
     }
-  }, [jwt]);
+  }, [jwt, auth.jwt]);
 
   useEffect(() => {
     if (auth.user || auth.error) setOpenSnackBar(true);
-    console.log(auth.user);
-  }, [auth.user]);
+  }, [auth.user, auth.error]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -33,8 +36,6 @@ export default function LoginUserForm({ handleNext }) {
       email: data.get("email"),
       password: data.get("password"),
     };
-    console.log("login user", userData);
-
     dispatch(login(userData));
   };
 
@@ -70,7 +71,7 @@ export default function LoginUserForm({ handleNext }) {
               type="submit"
               variant="contained"
               size="large"
-              sx={{ padding: ".8rem 0" }}
+              sx={{ padding: ".8rem 0", bgcolor: "#9155fd" }}
             >
               Login
             </Button>
@@ -84,6 +85,9 @@ export default function LoginUserForm({ handleNext }) {
             onClick={() => navigate("/register")}
             className="ml-5"
             size="small"
+            sx = {{
+              color:"#9155fd"
+            }}
           >
             Register
           </Button>

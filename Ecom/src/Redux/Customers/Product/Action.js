@@ -20,6 +20,7 @@ import {
 import api, { API_BASE_URL } from "../../../config/api";
 
 export const findProducts = (reqData) => async (dispatch) => {
+  // de-structure reqData object
   const {
     colors,
     sizes,
@@ -78,6 +79,7 @@ export const findProductById = (reqData) => async (dispatch) => {
   }
 };
 
+// Admin work
 export const createProduct = (product) => async (dispatch) => {
   try {
     dispatch({ type: CREATE_PRODUCT_REQUEST });

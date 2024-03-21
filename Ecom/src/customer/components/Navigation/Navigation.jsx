@@ -1,19 +1,20 @@
 import { Fragment, useEffect, useState } from "react";
 import { Dialog, Popover, Tab, Transition } from "@headlessui/react";
-import { 
+import {
   Bars3Icon,
   MagnifyingGlassIcon,
   ShoppingBagIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 
-import { navigation } from "./NavigationData";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, Button, Menu, MenuItem } from "@mui/material";
-import { deepPurple } from "@mui/material/colors";
-import { useLocation, useNavigate } from "react-router-dom";
+import { navigation } from "../../../config/navigationMenu";
 import AuthModal from "../Auth/AuthModal";
 import { useDispatch, useSelector } from "react-redux";
-import { getUser } from "../../../Redux/Auth/Action";
+import { deepPurple } from "@mui/material/colors";
+import { getUser, logout } from "../../../Redux/Auth/Action";
+import { getCart } from "../../../Redux/Customers/Cart/Action";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -22,16 +23,21 @@ function classNames(...classes) {
 export default function Navigation() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { auth } = useSelector((store) => store);
   const [openAuthModal, setOpenAuthModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const openUserMenu = Boolean(anchorEl);
   const jwt = localStorage.getItem("jwt");
+  const location=useLocation();
 
-  const { auth } = useSelector((store) => store);
-  const dispatch = useDispatch();
-  const location = useLocation();
-
-
+  useEffect(() => {
+    if (jwt) {
+      dispatch(getUser(jwt));
+      //dispatch(getCart(jwt));
+    }
+  }, [jwt]);
+  
   const handleUserClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -44,6 +50,7 @@ export default function Navigation() {
   };
   const handleClose = () => {
     setOpenAuthModal(false);
+   
   };
 
   const handleCategoryClick = (category, section, item, close) => {
@@ -51,19 +58,23 @@ export default function Navigation() {
     close();
   };
 
-  useEffect(()=>{
-      dispatch(getUser(jwt));
-  }, [jwt]);
-
-  useEffect(()=>{
-    if(auth.user){
+  useEffect(() => {
+    if (auth.user){ 
       handleClose();
     }
-    if(location.pathname === "/login" || location.pathname === "/register"){
-      navigate(-1);
+    if( auth.user?.role!=="ADMIN" && (location.pathname==="/login" || location.pathname==="/register")){
+      navigate(-1)
     }
-  },[auth.user])
+  }, [auth.user]);
 
+  const handleLogout = () => {
+    handleCloseUserMenu();
+    dispatch(logout());
+  };
+  const handleMyOrderClick=()=>{
+    handleCloseUserMenu()
+    navigate("/account/order")
+  }
 
   return (
     <div className="bg-white pb-10">
@@ -176,7 +187,8 @@ export default function Navigation() {
                             >
                               {section.items.map((item) => (
                                 <li key={item.name} className="flow-root">
-                                  <p onClick={() =>
+                                  <p
+                                                  onClick={() =>
                                                     handleCategoryClick(
                                                       category,
                                                       section,
@@ -184,9 +196,10 @@ export default function Navigation() {
                                                       close
                                                     )
                                                   }
-                                                  className="-m-2 block p-2 text-gray-500 cursor-pointer">
-                                    {item.name}
-                                  </p>
+                                                  className="cursor-pointer hover:text-gray-800"
+                                                >
+                                                  {item.name}
+                                                </p>
                                 </li>
                               ))}
                             </ul>
@@ -212,13 +225,12 @@ export default function Navigation() {
 
                 <div className="space-y-6 border-t border-gray-200 px-4 py-6">
                   <div className="flow-root">
-                   {!auth.user ?<a
+                    <a
                       href="/"
-                      className="-m-2 block p-2 font-medium text-gray-900 uppercase"
-                      style={{ color: "#9155fd" }}
+                      className="-m-2 block p-2 font-medium text-gray-900"
                     >
                       Sign Up
-                    </a>:auth.user.firstName +" "+ auth.user.lastName} 
+                    </a>
                   </div>
                 </div>
 
@@ -260,12 +272,14 @@ export default function Navigation() {
 
               {/* Logo */}
               <div className="ml-4 flex lg:ml-0">
-                <span className="sr-only">Your Company</span>
-                <img
-                  src="https://png.pngtree.com/png-clipart/20220111/original/pngtree-color-flat-e-commerce-online-shopping-illustration-design-png-image_7098437.png"
-                  alt="Shopwithzosh"
-                  className="h-14 w-14 mr-2"
-                />
+                <Link to="/">
+                  <span className="sr-only">Your Company</span>
+                  <img
+                    src="https://res.cloudinary.com/ddkso1wxi/image/upload/v1675919455/Logo/Copy_of_Zosh_Academy_nblljp.png"
+                    alt="Shopwithzosh"
+                    className="h-8 w-8 mr-2"
+                  />
+                </Link>
               </div>
 
               {/* Flyout menus */}
@@ -298,6 +312,7 @@ export default function Navigation() {
                             leaveTo="opacity-0"
                           >
                             <Popover.Panel className="absolute inset-x-0 top-full text-sm text-gray-500">
+                              {/* Presentational element used to render the bottom shadow, if we put the shadow on the actual panel it pokes out the top, so we use this shorter element to hide the top of the shadow */}
                               <div
                                 className="absolute inset-0 top-1/2 bg-white shadow"
                                 aria-hidden="true"
@@ -401,23 +416,24 @@ export default function Navigation() {
 
               <div className="ml-auto flex items-center">
                 <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
-                {auth.user?.firstName ? (
-                  <div>
-                    <Avatar
-                      className="text-white"
-                      onClick={handleUserClick}
-                      aria-controls={open ? "basic-menu" : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={open ? "true" : undefined}
-                      sx={{
-                        bgcolor: deepPurple[500],
-                        color: "white",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {auth.user.firstName[0].toUpperCase()}
-                    </Avatar>
-                    {/* <Button
+                  {auth.user ? (
+                    <div>
+                      <Avatar
+                        className="text-white"
+                        onClick={handleUserClick}
+                        aria-controls={open ? "basic-menu" : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={open ? "true" : undefined}
+                        // onClick={handleUserClick}
+                        sx={{
+                          bgcolor: deepPurple[500],
+                          color: "white",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {auth.user?.firstName[0].toUpperCase()}
+                      </Avatar>
+                      {/* <Button
                         id="basic-button"
                         aria-controls={open ? "basic-menu" : undefined}
                         aria-haspopup="true"
@@ -426,29 +442,37 @@ export default function Navigation() {
                       >
                         Dashboard
                       </Button> */}
-                    <Menu
-                      id="basic-menu"
-                      anchorEl={anchorEl}
-                      open={openUserMenu}
-                      onClose={handleCloseUserMenu}
-                      MenuListProps={{
-                        "aria-labelledby": "basic-button",
-                      }}
+                      <Menu
+                        id="basic-menu"
+                        anchorEl={anchorEl}
+                        open={openUserMenu}
+                        onClose={handleCloseUserMenu}
+                        MenuListProps={{
+                          "aria-labelledby": "basic-button",
+                        }}
+                      >
+                        <MenuItem onClick={handleCloseUserMenu}>
+                          Profile
+                        </MenuItem>
+                        
+                        <MenuItem onClick={handleMyOrderClick}>
+                          My Orders
+                        </MenuItem>
+                        <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                      </Menu>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={handleOpen}
+                      className="text-sm font-medium text-gray-700 hover:text-gray-800"
+                      sx = {
+                        {
+                          color: "#9155fd"
+                        }
+                    }
                     >
-                      <MenuItem onClick={handleCloseUserMenu}>Profile</MenuItem>
-
-                      <MenuItem onClick={(e)=>navigate("/account/order")}>My Orders</MenuItem>
-                      <MenuItem>Logout</MenuItem>
-                    </Menu>
-                  </div>
-               ) : (
-                  <Button
-                    onClick={handleOpen}
-                    className="text-sm font-medium text-gray-700 hover:text-gray-800 uppercase"
-                     sx = {{color: "#9155fd"}}
-                  >
-                    Sign Up
-                  </Button>
+                      Sign Up
+                    </Button>
                   )}
                 </div>
 
@@ -474,7 +498,7 @@ export default function Navigation() {
                       aria-hidden="true"
                     />
                     <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
-                      2
+                      {/* {cart.cart?.totalItem} */}
                     </span>
                     <span className="sr-only">items in cart, view bag</span>
                   </Button>
@@ -484,7 +508,7 @@ export default function Navigation() {
           </div>
         </nav>
       </header>
-      <AuthModal handleClose={handleClose} open={openAuthModal}/>
+      <AuthModal handleClose={handleClose} open={openAuthModal} />
     </div>
   );
 }
