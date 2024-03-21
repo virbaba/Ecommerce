@@ -21,7 +21,7 @@ function HomeSectionCarousel({data, sectionName}) {
 
    const items = data
      .slice(activeIndex, activeIndex + 5)
-     .map((item) => <HomeSectionCard key={item.id} product={item} />);
+     .map((item, index ) => <HomeSectionCard  product={item} />);
 
   const responsive = {
     0: { items: 1 },

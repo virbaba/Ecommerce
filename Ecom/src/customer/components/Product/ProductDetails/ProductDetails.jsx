@@ -1,16 +1,20 @@
 import { useState } from "react";
-import { StarIcon } from "@heroicons/react/20/solid";
 import { RadioGroup } from "@headlessui/react";
-import { Box, Button, Grid, LinearProgress, Rating } from "@mui/material";
+import { useNavigate, useParams } from "react-router-dom";
 import ProductReviewCard from "./ProductReviewCard";
-
-import { mens_kurta } from "../../../Data/mens_kurta";
-import HomeSectionCard from "../HomeSectionCard/HomeSectionCard";
-import { useNavigate } from "react-router-dom";
+import { Box, Button, Grid, LinearProgress, Rating } from "@mui/material";
+import ProductCard from "../ProductCard/ProductCard";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { findProductById } from "../../../../Redux/Customers/Product/Action";
+import { addItemToCart } from "../../../../Redux/Customers/Cart/Action";
+import { getAllReviews } from "../../../../Redux/Customers/Review/Action";
+import { lengha_page1 } from "../../../../Data/Women/LenghaCholi";
+import { gounsPage1 } from "../../../../Data/Gouns/gouns";
 
 const product = {
   name: "Basic Tee 6-Pack",
-  price: "$192",
+  price: "₹996",
   href: "#",
   breadcrumbs: [
     { id: 1, name: "Men", href: "#" },
@@ -40,14 +44,9 @@ const product = {
     { name: "Black", class: "bg-gray-900", selectedClass: "ring-gray-900" },
   ],
   sizes: [
-    { name: "XXS", inStock: false },
-    { name: "XS", inStock: true },
     { name: "S", inStock: true },
     { name: "M", inStock: true },
     { name: "L", inStock: true },
-    { name: "XL", inStock: true },
-    { name: "2XL", inStock: true },
-    { name: "3XL", inStock: true },
   ],
   description:
     'The Basic Tee 6-Pack allows you to fully express your vibrant personality with three grayscale options. Feeling adventurous? Put on a heather gray tee. Want to be a trendsetter? Try our exclusive colorway: "Black". Need to add an extra pop of color to your outfit? Our white tee has you covered.',
@@ -67,13 +66,35 @@ function classNames(...classes) {
 }
 
 export default function ProductDetails() {
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
-  const [selectedSize, setSelectedSize] = useState(product.sizes[2]);
-
+  const [selectedSize, setSelectedSize] = useState();
+  const [activeImage, setActiveImage] = useState(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { customersProduct, review } = useSelector((store) => store);
+  const { productId } = useParams();
+  const jwt = localStorage.getItem("jwt");
+  // console.log("param",productId,customersProduct.product)
+
+  const handleSetActiveImage = (image) => {
+    setActiveImage(image);
+  };
+
+  const handleSubmit = () => {
+    const data = { productId, size: selectedSize.name };
+    dispatch(addItemToCart({ data, jwt }));
+    navigate("/cart");
+  };
+
+  useEffect(() => {
+    const data = { productId: productId, jwt };
+    dispatch(findProductById(data));
+    dispatch(getAllReviews(productId));
+  }, [productId]);
+
+  // console.log("reviews ",review)
 
   return (
-    <div className="bg-white">
+    <div className="bg-white lg:px-20">
       <div className="pt-6">
         <nav aria-label="Breadcrumb">
           <ol
@@ -84,7 +105,7 @@ export default function ProductDetails() {
               <li key={breadcrumb.id}>
                 <div className="flex items-center">
                   <a
-                    href={breadcrumb.href}
+                    href={"/"}
                     className="mr-2 text-sm font-medium text-gray-900"
                   >
                     {breadcrumb.name}
@@ -114,23 +135,27 @@ export default function ProductDetails() {
           </ol>
         </nav>
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10 px-4 pt-10">
+        {/* product details */}
+        <section className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2 px-4 pt-10">
           {/* Image gallery */}
-          <div className="flex flex-col items-center">
-            <div className="overflow-hidden rounded-lg max-w-[30rem] max-h-[35rem]">
+          <div className="flex flex-col items-center ">
+            <div className=" overflow-hidden rounded-lg max-w-[30rem] max-h-[35rem]">
               <img
-                src={product.images[0].src}
+                src={activeImage?.src || customersProduct.product?.imageUrl}
                 alt={product.images[0].alt}
                 className="h-full w-full object-cover object-center"
               />
             </div>
             <div className="flex flex-wrap space-x-5 justify-center">
               {product.images.map((image) => (
-                <div className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg max-w-[5rem] max-h-[5rem] mt-4">
+                <div
+                  onClick={() => handleSetActiveImage(image)}
+                  className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg max-w-[5rem] max-h-[5rem] mt-4"
+                >
                   <img
                     src={image.src}
-                    alt={image.alt}
-                    className="h-full w-full object-cover object-cente cursor-pointer"
+                    alt={product.images[1].alt}
+                    className="h-full w-full object-cover object-center"
                   />
                 </div>
               ))}
@@ -140,11 +165,11 @@ export default function ProductDetails() {
           {/* Product info */}
           <div className="lg:col-span-1 mx-auto max-w-2xl px-4 pb-16 sm:px-6  lg:max-w-7xl  lg:px-8 lg:pb-24">
             <div className="lg:col-span-2">
-              <h1 className="text-lg lg:text-xl font-semibold tracking-tight text-gray-900">
-                Brand
+              <h1 className="text-lg lg:text-xl font-semibold tracking-tight text-gray-900  ">
+                {customersProduct.product?.brand}
               </h1>
               <h1 className="text-lg lg:text-xl tracking-tight text-gray-900 opacity-60 pt-1">
-                Title
+                {customersProduct.product?.title}
               </h1>
             </div>
 
@@ -152,14 +177,21 @@ export default function ProductDetails() {
             <div className="mt-4 lg:row-span-3 lg:mt-0">
               <h2 className="sr-only">Product information</h2>
               <div className="flex space-x-5 items-center text-lg lg:text-xl tracking-tight text-gray-900 mt-6">
-                <p className="font-semibold">₹ discounted-Price</p>
-                <p className="opacity-50 line-through">₹ price</p>
-                <p className="text-green-600 font-semibold">discount % Off</p>
+                <p className="font-semibold">
+                  ₹{customersProduct.product?.discountedPrice}
+                </p>
+                <p className="opacity-50 line-through">
+                  ₹{customersProduct.product?.price}
+                </p>
+                <p className="text-green-600 font-semibold">
+                  {customersProduct.product?.discountPersent}% Off
+                </p>
               </div>
 
               {/* Reviews */}
               <div className="mt-6">
                 <h3 className="sr-only">Reviews</h3>
+
                 <div className="flex items-center space-x-3">
                   <Rating
                     name="read-only"
@@ -170,21 +202,21 @@ export default function ProductDetails() {
 
                   <p className="opacity-60 text-sm">42807 Ratings</p>
                   <p className="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                    {reviews.totalCount} Reviews
+                    {reviews.totalCount} reviews
                   </p>
                 </div>
               </div>
 
-              <form className="mt-10">
-                {/* Size */}
+              <form className="mt-10" onSubmit={handleSubmit}>
+                {/* Sizes */}
                 <div className="mt-10">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium text-gray-900">Size</h3>
                   </div>
 
                   <RadioGroup
-                    value={selectedColor}
-                    onChange={setSelectedColor}
+                    value={selectedSize}
+                    onChange={setSelectedSize}
                     className="mt-4"
                   >
                     <RadioGroup.Label className="sr-only">
@@ -254,12 +286,7 @@ export default function ProductDetails() {
                 <Button
                   variant="contained"
                   type="submit"
-                  sx={{
-                    padding: ".8rem 2rem",
-                    marginTop: "2rem",
-                    bgcolor: "#9155fd",
-                  }}
-                  onClick={(e)=> navigate("/cart")}
+                  sx={{ padding: ".8rem 2rem", marginTop: "2rem" }}
                 >
                   Add To Cart
                 </Button>
@@ -273,7 +300,7 @@ export default function ProductDetails() {
 
                 <div className="space-y-6">
                   <p className="text-base text-gray-900">
-                    {product.description}
+                    {customersProduct.product?.description}
                   </p>
                 </div>
               </div>
@@ -315,9 +342,9 @@ export default function ProductDetails() {
             <Grid container spacing={7}>
               <Grid item xs={7}>
                 <div className="space-y-5">
-                  <ProductReviewCard />
-                  <ProductReviewCard />
-                  <ProductReviewCard />
+                  {review.reviews?.map((item, i) => (
+                    <ProductReviewCard item={item} />
+                  ))}
                 </div>
               </Grid>
 
@@ -373,11 +400,11 @@ export default function ProductDetails() {
                         sx={{ bgcolor: "#d0d0d0", borderRadius: 4, height: 7 }}
                         variant="determinate"
                         value={30}
-                        color="primary"
+                        color="success"
                       />
                     </Grid>
                     <Grid xs={2}>
-                      <p className="opacity-50 p-2">17259</p>
+                      <p className="opacity-50 p-2">19259</p>
                     </Grid>
                   </Grid>
                 </Box>
@@ -397,11 +424,11 @@ export default function ProductDetails() {
                         sx={{ bgcolor: "#d0d0d0", borderRadius: 4, height: 7 }}
                         variant="determinate"
                         value={25}
-                        color="secondary"
+                        color="orange"
                       />
                     </Grid>
                     <Grid xs={2}>
-                      <p className="opacity-50 p-2">16259</p>
+                      <p className="opacity-50 p-2">19259</p>
                     </Grid>
                   </Grid>
                 </Box>
@@ -417,18 +444,22 @@ export default function ProductDetails() {
                     </Grid>
                     <Grid xs={7}>
                       <LinearProgress
+                        className=""
                         sx={{
                           bgcolor: "#d0d0d0",
                           borderRadius: 4,
                           height: 7,
+                          "& .MuiLinearProgress-bar": {
+                            bgcolor: "#885c0a", // stroke color
+                          },
                         }}
                         variant="determinate"
                         value={21}
-                        color="warning"
+                        color="success"
                       />
                     </Grid>
                     <Grid xs={2}>
-                      <p className="opacity-50 p-2">13259</p>
+                      <p className="opacity-50 p-2">19259</p>
                     </Grid>
                   </Grid>
                 </Box>
@@ -452,7 +483,7 @@ export default function ProductDetails() {
                       />
                     </Grid>
                     <Grid xs={2}>
-                      <p className="opacity-50 p-2">10259</p>
+                      <p className="opacity-50 p-2">19259</p>
                     </Grid>
                   </Grid>
                 </Box>
@@ -462,11 +493,11 @@ export default function ProductDetails() {
         </section>
 
         {/* similer product */}
-        <section className="pt-10">
-          <h1 className="py-5 text-xl font-bold">Similar Products</h1>
+        <section className=" pt-10">
+          <h1 className="py-5 text-xl font-bold">Similer Products</h1>
           <div className="flex flex-wrap space-y-5">
-            {mens_kurta.map((item) => (
-              <HomeSectionCard key={item.id} product={item} />
+            {gounsPage1.map((item) => (
+              <ProductCard product={item} />
             ))}
           </div>
         </section>
